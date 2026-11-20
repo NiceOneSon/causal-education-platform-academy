@@ -1,0 +1,15 @@
+{
+  "name": "@academy/contracts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./academies": "./generated/academies.ts",
+    "./openapi/*": "./openapi/*"
+  },
+  "scripts": {
+    "generate": "openapi-typescript openapi/academies.yaml -o generated/academies.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
+  }
+}

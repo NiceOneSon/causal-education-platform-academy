@@ -1,0 +1,412 @@
+openapi: 3.1.0
+info:
+  title: Academy API — academies 모듈
+  version: 0.1.0
+  description: |
+    학원, 반, 강사, 학생 등록.
+    이 파일이 서버와 웹의 원본이다. API를 바꿀 때는 이 파일을 먼저 고친다.
+    초안: 인증·권한은 아직 정의하지 않았다.
+tags:
+  - name: academies
+paths:
+  /academies:
+    get:
+      operationId: listAcademies
+      tags: [academies]
+      summary: 학원 목록
+      responses:
+        "200":
+          description: 학원 목록
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademyList"
+    post:
+      operationId: createAcademy
+      tags: [academies]
+      summary: 학원 등록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAcademyRequest"
+      responses:
+        "201":
+          description: 등록된 학원
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Academy"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /academies/{academyId}:
+    parameters:
+      - $ref: "#/components/parameters/AcademyId"
+    get:
+      operationId: getAcademy
+      tags: [academies]
+      summary: 학원 하나
+      responses:
+        "200":
+          description: 학원
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Academy"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /academies/{academyId}/teachers:
+    parameters:
+      - $ref: "#/components/parameters/AcademyId"
+    get:
+      operationId: listTeachers
+      tags: [academies]
+      summary: 학원의 강사 목록
+      responses:
+        "200":
+          description: 강사 목록
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: createTeacher
+      tags: [academies]
+      summary: 강사 등록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeacherRequest"
+      responses:
+        "201":
+          description: 등록된 강사
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Teacher"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /academies/{academyId}/students:
+    parameters:
+      - $ref: "#/components/parameters/AcademyId"
+    get:
+      operationId: listStudents
+      tags: [academies]
+      summary: 학원의 학생 목록
+      responses:
+        "200":
+          description: 학생 목록
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: createStudent
+      tags: [academies]
+      summary: 학생 등록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStudentRequest"
+      responses:
+        "201":
+          description: 등록된 학생
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /academies/{academyId}/classes:
+    parameters:
+      - $ref: "#/components/parameters/AcademyId"
+    get:
+      operationId: listClasses
+      tags: [academies]
+      summary: 학원의 반 목록
+      responses:
+        "200":
+          description: 반 목록
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: createClass
+      tags: [academies]
+      summary: 반 등록 (담당 강사는 선택)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClassRequest"
+      responses:
+        "201":
+          description: 등록된 반
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Class"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/InvalidReference"
+  /academies/{academyId}/classes/{classId}/students:
+    parameters:
+      - $ref: "#/components/parameters/AcademyId"
+      - $ref: "#/components/parameters/ClassId"
+    get:
+      operationId: listClassStudents
+      tags: [academies]
+      summary: 반에 배정된 학생 목록
+      responses:
+        "200":
+          description: 학생 목록
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /academies/{academyId}/classes/{classId}/students/{studentId}:
+    parameters:
+      - $ref: "#/components/parameters/AcademyId"
+      - $ref: "#/components/parameters/ClassId"
+      - $ref: "#/components/parameters/StudentId"
+    put:
+      operationId: enrollStudent
+      tags: [academies]
+      summary: 학생을 반에 배정 (이미 배정돼 있으면 그대로 성공)
+      responses:
+        "204":
+          description: 배정됨
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  parameters:
+    AcademyId:
+      name: academyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ClassId:
+      name: classId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    StudentId:
+      name: studentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: 요청 형식이 계약과 맞지 않음
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: 대상이 없음 (다른 학원의 대상도 없음으로 본다)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InvalidReference:
+      description: 본문이 가리키는 대상이 이 학원에 없음
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          examples: [NOT_FOUND]
+        message:
+          type: string
+    Name:
+      type: string
+      minLength: 1
+      maxLength: 100
+    Academy:
+      type: object
+      additionalProperties: false
+      required: [id, name, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          $ref: "#/components/schemas/Name"
+        createdAt:
+          type: string
+          format: date-time
+    AcademyList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Academy"
+    CreateAcademyRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          $ref: "#/components/schemas/Name"
+    Teacher:
+      type: object
+      additionalProperties: false
+      required: [id, academyId, name, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        academyId:
+          type: string
+          format: uuid
+        name:
+          $ref: "#/components/schemas/Name"
+        createdAt:
+          type: string
+          format: date-time
+    TeacherList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Teacher"
+    CreateTeacherRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          $ref: "#/components/schemas/Name"
+    Grade:
+      description: 학년. 초1=1 … 고3=12. 모르면 null.
+      type: [integer, "null"]
+      minimum: 1
+      maximum: 12
+    Student:
+      type: object
+      additionalProperties: false
+      required: [id, academyId, name, grade, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        academyId:
+          type: string
+          format: uuid
+        name:
+          $ref: "#/components/schemas/Name"
+        grade:
+          $ref: "#/components/schemas/Grade"
+        createdAt:
+          type: string
+          format: date-time
+    StudentList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Student"
+    CreateStudentRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          $ref: "#/components/schemas/Name"
+        grade:
+          $ref: "#/components/schemas/Grade"
+    Class:
+      type: object
+      additionalProperties: false
+      required: [id, academyId, name, teacherId, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        academyId:
+          type: string
+          format: uuid
+        name:
+          $ref: "#/components/schemas/Name"
+        teacherId:
+          description: 담당 강사. 없으면 null.
+          type: [string, "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    ClassList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Class"
+    CreateClassRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          $ref: "#/components/schemas/Name"
+        teacherId:
+          type: [string, "null"]
+          format: uuid

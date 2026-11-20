@@ -1,0 +1,12 @@
+# 로컬 개발 DB. 가짜 데이터만 넣는다.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: academy
+      POSTGRES_PASSWORD: academy
+      POSTGRES_DB: academy_dev
+    ports:
+      - "55432:5432"
+    volumes:
+      - ./scripts/create-test-db.sql:/docker-entrypoint-initdb.d/create-test-db.sql:ro
