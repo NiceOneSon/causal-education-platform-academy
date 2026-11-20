@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: academy
+          POSTGRES_PASSWORD: academy
+          POSTGRES_DB: academy_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U academy"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # CI 안에서만 쓰는 일회용 DB. 운영 자격증명이 아니다.
+      TEST_DATABASE_URL: postgres://academy:academy@localhost:5432/academy_test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: 계약에서 만든 타입이 최신인지
+        run: |
+          npm run contracts:generate
+          git diff --exit-code contracts/generated
+      - run: npm run typecheck
+      - name: 마이그레이션 적용 (두 번 돌려도 같은지)
+        run: |
+          DATABASE_URL=$TEST_DATABASE_URL npm run db:migrate
+          DATABASE_URL=$TEST_DATABASE_URL npm run db:migrate
+      - run: npm test
+      - run: npm run build:web
+
+  images:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # 이미지를 만들 수 있는지만 확인한다. 레지스트리 push는 하지 않는다.
+      - run: docker build -f apps/api/Dockerfile -t academy-api:ci .
+      - run: docker build -f apps/web/Dockerfile -t academy-web:ci .
